@@ -13,11 +13,11 @@ console.log(
 interface Patch extends PatchDefinition {
   query: string[]
   patch: PatchFunction[]
+  applied?: boolean
 }
 
 interface PatchGroup extends PatchGroupDefinition {
   patches: Patch[]
-  applied?: boolean
 }
 
 interface Plugin extends PluginDefinition {
@@ -45,57 +45,37 @@ for (const plugin of pluginDefs) {
   Plugins.push(p)
 }
 
-const patchModule = (module: Function) => {
-  let code = "0," + module
+const applyPatches = (plugin: Plugin, factory: any, ctx: PatchContext) => {
+  for (const group of plugin.patches) {
+    for (const patch of group.patches) {
+      let matched = false
 
-  const ctx: PatchContext = {
-    id: -1,
-  }
+      for (const m in factory) {
+        let code: string
+        try {
+          code = Function.prototype.toString.call(factory[m])
+        } catch {
+          // pray it never happens!
+          continue
+        }
 
-  const matches = new Set<Plugin>()
-
-  for (const id in Plugins) {
-    let error
-    const p = Plugins[id]
-
-    ctx.id = +id
-
-    for (const group of p.patches) {
-      const rollback = code
-
-      for (const patch of group.patches) {
         if (!patch.query.every(m => code.includes(m)))
           continue
 
-        console.log("AAAAAAAA")
-        for (const i in patch.patch) {
-          const f = patch.patch[i]
-          try {
-            code = f(code, ctx)
-            matches.add(p)
-            if (group.applied)
-              console.warn(`%c picnic | %cPatch #${i + 1} from ${p.name} was reapplied`, ...consoleStyle)
-            group.applied = true
-            error = undefined
-            break
-          } catch (e) {
-            error = "" + e
-            code = rollback
-          }
+        matched = true
+        for (const f of patch.patch) {
+          code = f(code, ctx)
+          if (patch.applied)
+            console.warn("Query is not unique: ", patch.query)
+          patch.applied = true
         }
+
+        factory[m] = (0, eval)(`0,${code}\n// Patched by ${plugin.name}`)
       }
 
-      if (error != null)
-        console.error(`%c picnic | %c${error}`, ...consoleStyle)
+      if (matched)
+        break;
     }
-  }
-
-  if (matches.size) {
-    code += `\n\n// Patched by ${[...matches].map(p => p.name).join(", ")}`
-
-    return eval.call(undefined, code)
-  } else {
-    return module
   }
 }
 
@@ -106,9 +86,19 @@ let loadModules = Jason.push.bind(Jason)
 
 function handlePush(chunk: any) {
   const [, factory] = chunk
+  const ctx: PatchContext = { id: -1 }
 
-  for (const id in factory) {
-    factory[id] = patchModule(factory[id])
+  const url = Error().stack?.match(/https:\/\/[\w-._~\/]*/)?.[0]
+  console.log("%cpicnic | %cIntercepted chunk", ...consoleStyle, url)
+
+  for (const [id, plugin] of Plugins.entries()) {
+    if (!plugin.patches.length)
+      continue
+
+    console.group(`%cpicnic | %cApplying patches from ${plugin.name}`, ...consoleStyle)
+    ctx.id = id
+    applyPatches(plugin, factory, ctx)
+    console.groupEnd()
   }
 
   return loadModules(chunk)

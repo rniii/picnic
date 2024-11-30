@@ -17,7 +17,7 @@ export const replace = (match: string | RegExp, repl: string): PatchFunction => 
     const oldSrc = src
     src = src.replace(match, repl.replace("$self", `picnic.plugins[${ctx.id}]`))
     if (oldSrc === src)
-      throw `Patch failed: ${match}`
+      console.warn(`Patch failed: ${match}`)
     return src
   }
 }
