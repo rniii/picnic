@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <script defer src="options.js"></script>
+  <style>
+  body {
+    background: #151515;
+    color: #d8d5d0;
+    user-select: none;
+    padding: 0 1ch;
+  }
+  button {
+    font: unset;
+    background: #303030;
+    padding: 0.25em 0.5em;
+    border: solid 1px;
+    border-radius: 4px;
+  }
+  button:hover {
+    background: #404040;
+  }
+  button:active {
+    background: #202020;
+  }
+  h1 {
+    color: mediumaquamarine;
+    font-size: 1.2rem;
+  }
+  footer {
+    font-size: 0.8em;
+    color: #909090;
+  }
+  </style>
+
+  <body>
+    <h1 id="title">Picnic</h1>
+
+    <p id="status">Loading</p>
+    <button id="grant" hidden>Grant permission</button>
+
+    <footer id="version"></footer>
+  </body>
+</html>

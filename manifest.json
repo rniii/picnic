@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "Picnic for Mastodon",
+  "version": "0.1.0",
+  "permissions": ["scripting", "webRequest", "webRequestBlocking"],
+  "optional_permissions": ["https://*/*"],
+  "browser_action": {
+    "default_title": "Picnic",
+    "default_popup": "options.html"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "world": "MAIN",
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

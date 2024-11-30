@@ -3,7 +3,8 @@
   "typescript": {
     "semiColons": "asi",
     "useBraces": "maintain",
-    "singleBodyPosition": "nextLine"
+    "singleBodyPosition": "nextLine",
+    "quoteStyle": "preferDouble"
   },
   "plugins": [
     "https://plugins.dprint.dev/typescript-0.89.3.wasm",
