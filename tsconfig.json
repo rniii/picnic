@@ -6,5 +6,6 @@
     "moduleResolution": "bundler",
     "noEmit": true,
     "target": "esnext",
+    "jsx": "preserve"
   }
 }

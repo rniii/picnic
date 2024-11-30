@@ -1,7 +1,8 @@
 declare const VERSION: string
 declare const browser: typeof chrome
 
-(window as any).browser ??= chrome
+// @ts-expect-error
+window.browser ??= chrome
 
 const $ = <T extends HTMLElement>(q: string) => document.querySelector<T>(q)!
 

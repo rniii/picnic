@@ -14,14 +14,19 @@ const resources = [
   "manifest.json",
 ]
 
-const options = {
+const options = /** @type {import("esbuild").BuildOptions} */ ({
   bundle: true,
   minifySyntax: true,
   logLevel: "info",
+  globalName: "picnic",
   define: {
     VERSION: JSON.stringify(version),
   },
-}
+  jsx: "transform",
+  jsxFactory: "__picnic_createElement",
+  jsxFragment: "__picnic_Fragment",
+  inject: ["src/react.ts"]
+})
 
 for (const src of resources) {
   const dst = path.join("dist/unpacked", path.basename(src))

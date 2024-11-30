@@ -1,5 +1,9 @@
 import { PatchContext, PatchDefinition, PatchFunction, PatchGroupDefinition, PluginDefinition } from "picnic"
 import { pluginDefs } from "plugins"
+import { wreq } from "webpack"
+
+export * from "webpack"
+export { wreq }
 
 const consoleStyle = ["color:mediumaquamarine", "color:currentColor"]
 
@@ -29,14 +33,14 @@ interface Plugin extends PluginDefinition {
   patches: PatchGroup[]
 }
 
-const Plugins = [] as Plugin[]
+export const plugins = [] as Plugin[]
 
 for (const plugin of pluginDefs) {
   const p = plugin as Plugin
 
   // Normalise patches
 
-  p.patches = plugin.patches.map(p => "patches" in p ? p as PatchGroup : { patches: [p as Patch] })
+  p.patches = plugin.patches?.map(p => "patches" in p ? p as PatchGroup : { patches: [p as Patch] }) ?? []
 
   for (const group of p.patches) {
     for (const patch of group.patches) {
@@ -47,18 +51,18 @@ for (const plugin of pluginDefs) {
     }
   }
 
-  Plugins.push(p)
+  plugins.push(p)
 }
 
-const applyPatches = (plugin: Plugin, factory: any, ctx: PatchContext) => {
+const applyPatches = (plugin: Plugin, factories: any, ctx: PatchContext) => {
   for (const group of plugin.patches) {
     for (const patch of group.patches) {
       let matched = false
 
-      for (const m in factory) {
+      for (const m in factories) {
         let code: string
         try {
-          code = Function.prototype.toString.call(factory[m])
+          code = Function.prototype.toString.call(factories[m])
         } catch {
           // pray it never happens!
           continue
@@ -75,15 +79,18 @@ const applyPatches = (plugin: Plugin, factory: any, ctx: PatchContext) => {
           patch.applied = true
         }
 
+        if (!code.includes("//# sourceURL"))
+          code += `\n//# sourceURL=Webpack${m}`
+
         try {
-          factory[m] = (0, eval)(`0,${code}\n// Patched by ${plugin.name}`)
+          factories[m] = (0, eval)(`// Patched by ${plugin.name}\n0,${code}`)
         } catch (e) {
           console.warn(e)
         }
       }
 
       if (matched)
-        break;
+        break
     }
   }
 }
@@ -99,8 +106,9 @@ function handlePush(chunk: any) {
 
   const url = Error().stack?.match(/https:\/\/[\w-._~\/]*/)?.[0]
   console.log("%cpicnic | %cIntercepted chunk", ...consoleStyle, url)
+  console.time("patch")
 
-  for (const [id, plugin] of Plugins.entries()) {
+  for (const [id, plugin] of plugins.entries()) {
     if (!plugin.patches.length)
       continue
 
@@ -110,19 +118,22 @@ function handlePush(chunk: any) {
     console.groupEnd()
   }
 
+  console.timeEnd("patch")
+
+  queueMicrotask(() => {
+    for (const plugin of plugins) {
+      if (!plugin.start)
+        continue
+
+      console.log(`%cpicnic | %cStarting ${plugin.name}`)
+      plugin.start()
+    }
+  })
+
   return loadModules(chunk)
 }
 
 handlePush.bind = (that: any) => loadModules.bind(that)
-
-let wreq: any
-Object.defineProperty(Function.prototype, "c", {
-  configurable: true,
-  set(value) {
-    Object.defineProperty(Function.prototype, "c", { configurable: true, value })
-    wreq = this
-  },
-})
 
 Object.defineProperty(Jason, "push", {
   get: () => handlePush,

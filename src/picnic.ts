@@ -48,7 +48,8 @@ export interface PluginDefinition {
   name: string
   authors: Author[]
   description?: string
-  patches: (PatchDefinition | PatchGroupDefinition)[]
+  patches?: (PatchDefinition | PatchGroupDefinition)[]
+  start?(): void
 }
 
 export const define = <T extends PluginDefinition>(m: T) => m

@@ -1,4 +1,5 @@
-;(window as any).browser ??= chrome
+// @ts-expect-error
+window.browser ??= chrome
 
 const hosts = localStorage.getItem("hosts")?.split(",").filter(x => x) ?? []
 
