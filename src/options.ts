@@ -22,6 +22,14 @@ const renderUi = async () => {
 
   $<HTMLButtonElement>("#grant").onclick = async () => {
     await browser.permissions.request({ origins: [host] })
+
+    // I feel like this should be the browser's job, but on MV2 the "scripting" and "webRequest"
+    // permissions are granted for *every website*, so we keep track of it to not modify random
+    // websites
+    const permissions = await browser.permissions.getAll()
+    localStorage.setItem("hosts", permissions.origins?.join(",") ?? "")
+
+    browser.runtime.reload()
   }
 }
 

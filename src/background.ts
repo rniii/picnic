@@ -1,13 +1,27 @@
-(window as any).browser ??= chrome
+;(window as any).browser ??= chrome
 
-browser.webRequest.onHeadersReceived.addListener(
-  (e) => {
-    const csp = e.responseHeaders!.find(h => h.name == "content-security-policy")
+const hosts = localStorage.getItem("hosts")?.split(",").filter(x => x) ?? []
 
-    csp && (csp.value = csp.value!.replace("script-src ", "$& 'unsafe-eval' "))
-    console.log(csp)
-    return e
-  },
-  { urls: ["<all_urls>"], types: ["main_frame"] },
-  ["blocking", "responseHeaders"]
-)
+if (hosts.length) {
+  browser.scripting.registerContentScripts([{
+    world: "MAIN",
+    matches: hosts,
+    id: "picnic",
+    js: ["content.js"],
+    runAt: "document_start",
+  }])
+
+  browser.webRequest.onHeadersReceived.addListener(
+    (e) => {
+      if (!e.responseHeaders?.some(h => h.name == "server" && h.value?.toLowerCase() == "mastodon"))
+        return console.warn(`Not a mastodon server: ${e.url}`)
+
+      const csp = e.responseHeaders?.find(h => h.name == "content-security-policy")
+      if (csp)
+        csp.value = csp.value?.replace("script-src ", "$& 'unsafe-eval' ")
+      return e
+    },
+    { urls: hosts, types: ["main_frame"] },
+    ["blocking", "responseHeaders"],
+  )
+}

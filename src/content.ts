@@ -3,6 +3,11 @@ import { pluginDefs } from "plugins"
 
 const consoleStyle = ["color:mediumaquamarine", "color:currentColor"]
 
+if ("webpackJsonp" in window)
+  console.warn("%c picnic | %cWebpack has already loaded!!", ...consoleStyle)
+if ("browser" in window || "chrome" in window)
+  console.warn("%c picnic | %cI shouldn't be running on the extension side!!", ...consoleStyle)
+
 console.log(
   `%cpicnic | %cLoading %cv${VERSION}%c!`,
   ...consoleStyle,
@@ -70,7 +75,11 @@ const applyPatches = (plugin: Plugin, factory: any, ctx: PatchContext) => {
           patch.applied = true
         }
 
-        factory[m] = (0, eval)(`0,${code}\n// Patched by ${plugin.name}`)
+        try {
+          factory[m] = (0, eval)(`0,${code}\n// Patched by ${plugin.name}`)
+        } catch (e) {
+          console.warn(e)
+        }
       }
 
       if (matched)
@@ -106,12 +115,12 @@ function handlePush(chunk: any) {
 
 handlePush.bind = (that: any) => loadModules.bind(that)
 
-let webpackCache: any
+let wreq: any
 Object.defineProperty(Function.prototype, "c", {
   configurable: true,
   set(value) {
     Object.defineProperty(Function.prototype, "c", { configurable: true, value })
-    webpackCache = value
+    wreq = this
   },
 })
 
