@@ -30,7 +30,9 @@ export const ErrorBoundary = lazyComponent(() =>
 
     render() {
       return this.state.error
-        ? this.props.fallback ?? <div className="error-boundary" title={this.state.error}>{"Something exploded :<"}</div>
+        ? "fallback" in this.props
+          ? this.props.fallback
+          : <div className="error-boundary" title={this.state.error}>{"Something exploded :<"}</div>
         : this.props.children
     }
   }

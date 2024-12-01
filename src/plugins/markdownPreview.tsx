@@ -1,14 +1,19 @@
+import { ErrorBoundary } from "components/ErrorBoundary"
 import MarkdownIt from "markdown-it"
 import { define, devs, re, replace } from "picnic"
-import { reactRedux } from "./common"
-import { ErrorBoundary } from "components/ErrorBoundary"
 
 const md = MarkdownIt().set({ linkify: true })
 
-const Preview = () => {
-  const store = reactRedux.useStore()
-
-  return <div>{store}</div>
+const Preview = (props: any) => {
+  return (
+    <div className="status__content">
+      <div
+        className="status__content__text"
+        dangerouslySetInnerHTML={{ __html: md.render(props.text) }}
+      >
+      </div>
+    </div>
+  )
 }
 
 export default define({
@@ -16,20 +21,16 @@ export default define({
   authors: [devs.rini],
   patches: [
     {
-      query: 'className:"compose-panel"',
-      patch: [
-        replace(re`\(\i.\i\),{singleColumn:!0}),`, "$&$self.renderPreview(),"),
-      ],
-    },
-    {
       query: 'className:"compose-form"',
       patch: [
-        replace("", ""),
+        replace(re`disabled:!this.canSubmit()}))))]})`, "$&,$self.renderPreview(this.props)"),
       ],
     },
   ],
 
-  renderPreview: () => <ErrorBoundary fallback={null}>
-    <Preview />
-  </ErrorBoundary>,
+  renderPreview: (props: any) => (
+    <ErrorBoundary>
+      <Preview {...props} />
+    </ErrorBoundary>
+  ),
 })
