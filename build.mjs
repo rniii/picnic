@@ -19,13 +19,11 @@ const options = /** @type {import("esbuild").BuildOptions} */ ({
   minifySyntax: true,
   logLevel: "info",
   globalName: "picnic",
-  define: {
-    VERSION: JSON.stringify(version),
-  },
+  define: { VERSION: JSON.stringify(version), },
   jsx: "transform",
   jsxFactory: "__picnic_createElement",
   jsxFragment: "__picnic_Fragment",
-  inject: ["src/react.ts"]
+  inject: ["src/globals.ts"]
 })
 
 for (const src of resources) {

@@ -19,7 +19,7 @@ if (hosts.length) {
 
       const csp = e.responseHeaders?.find(h => h.name == "content-security-policy")
       if (csp)
-        csp.value = csp.value?.replace("script-src ", "$& 'unsafe-eval' ")
+        csp.value = csp.value?.replace("script-src ", "script-src 'unsafe-eval' ")
       return e
     },
     { urls: hosts, types: ["main_frame"] },

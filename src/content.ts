@@ -12,12 +12,7 @@ if ("webpackJsonp" in window)
 if ("browser" in window || "chrome" in window)
   console.warn("%c picnic | %cI shouldn't be running on the extension side!!", ...consoleStyle)
 
-console.log(
-  `%cpicnic | %cLoading %cv${VERSION}%c!`,
-  ...consoleStyle,
-  "font-weight:bold",
-  "",
-)
+console.log( `%cpicnic | %cLoading v${VERSION}!`, ...consoleStyle)
 
 interface Patch extends PatchDefinition {
   query: string[]
@@ -98,6 +93,7 @@ const applyPatches = (plugin: Plugin, factories: any, ctx: PatchContext) => {
 // idk what this guy is im just calling him Jason
 const Jason = (window as any).webpackJsonp = [] as any[]
 
+let started = false
 let loadModules = Jason.push.bind(Jason)
 
 function handlePush(chunk: any) {
@@ -120,12 +116,14 @@ function handlePush(chunk: any) {
 
   console.timeEnd("patch")
 
-  queueMicrotask(() => {
+  started || queueMicrotask(() => {
+    started = true
+
     for (const plugin of plugins) {
       if (!plugin.start)
         continue
 
-      console.log(`%cpicnic | %cStarting ${plugin.name}`)
+      console.log(`%cpicnic | %cStarting ${plugin.name}`, ...consoleStyle)
       plugin.start()
     }
   })

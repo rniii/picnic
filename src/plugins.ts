@@ -1,10 +1,10 @@
 import { PluginDefinition } from "picnic"
 import common from "plugins/common"
 import core from "plugins/core"
-import settings from "plugins/settings"
+import markdownPreview from "plugins/markdownPreview"
 
 export const pluginDefs = [
   common,
   core,
-  settings,
+  markdownPreview,
 ] as PluginDefinition[]

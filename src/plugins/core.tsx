@@ -6,12 +6,10 @@ export default define({
   patches: [
     {
       query: 'className:"link-footer"',
-      patch: [
-        replace(re`"v",\i.\i)`, '$&," + picnic"'),
-      ],
+      patch: replace(re`"v",\i.\i)`, '$&,$self.renderLink()'),
     },
   ],
 
-  start() {
-  }
+  renderLink: () =>
+    <> + <a href="https://github.com/rniii/picnic" target="_blank">picnic</a></>
 })

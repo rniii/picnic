@@ -44,3 +44,20 @@ export const lazyModule = (...filter: string[]) => {
     },
   })
 }
+
+export const search = (...query: string[]) => {
+  for (const id in wreq.m) {
+    let code: string
+    try {
+      code = Function.prototype.toString.call(wreq.m[id])
+    } catch {
+      continue
+    }
+
+    if (!query.every(m => code.includes(m)))
+      continue
+
+    console.log("Found module %i", id)
+    return wreq.c[id].exports
+  }
+}

@@ -1,3 +1,21 @@
+export const lazy = <T extends object>(get: () => T) => {
+  let cached: any
+
+  return new Proxy<T>(function() {} as any, {
+    get: (_, key) => Reflect.get(cached ??= get(), key),
+    set: (_, key, val) => Reflect.set(cached ??= get(), key, val),
+  })
+}
+
+export const lazyComponent = <P extends object>(
+  get: () => React.ComponentClass<P> | ((props: P) => React.ReactNode),
+) => {
+  let cached: any
+
+  // @ts-expect-error
+  return (props: P) => __picnic_createElement(cached ??= get(), props)
+}
+
 export const re = (template: TemplateStringsArray) => {
   const raw = template.raw[0]
   const flags = raw.match(/^\(\?([a-z]+)\)/)
