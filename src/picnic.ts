@@ -1,9 +1,16 @@
 export const lazy = <T extends object>(get: () => T) => {
   let cached: any
+  let sameTick = true
+  setTimeout(() => sameTick = false)
 
   return new Proxy<T>(function() {} as any, {
-    get: (_, key) => Reflect.get(cached ??= get(), key),
+    get: (_, key) =>
+      sameTick
+        ? lazy(() => (cached ??= get())[key])
+        : Reflect.get(cached ??= get(), key),
     set: (_, key, val) => Reflect.set(cached ??= get(), key, val),
+    apply: (_, this_, args) => Reflect.apply(cached ??= get(), this_, args),
+    construct: (_, args) => Reflect.construct(cached ??= get(), args),
   })
 }
 
@@ -13,7 +20,7 @@ export const lazyComponent = <P extends object>(
   let cached: any
 
   // @ts-expect-error
-  return (props: P) => __picnic_createElement(cached ??= get(), props)
+  return (props: P) => __picnic_createElement(cached ??= get(), props) as React.ReactNode
 }
 
 export const re = (template: TemplateStringsArray) => {
@@ -70,7 +77,7 @@ export interface PluginDefinition {
   start?(): void
 }
 
-export const define = <T extends PluginDefinition>(m: T) => m
+export const define = <T extends PluginDefinition>(m: T & Record<string, any>) => m
 
 export const devs = {
   rini: {

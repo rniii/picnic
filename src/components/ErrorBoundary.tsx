@@ -1,6 +1,7 @@
 import { lazyComponent } from "picnic"
 import { react } from "plugins/common"
-import { ErrorInfo, ReactNode } from "react"
+import { createElement } from "plugins/common/react"
+import type { ErrorInfo, ReactNode } from "react"
 
 interface Props {
   fallback?: ReactNode
@@ -37,3 +38,9 @@ export const ErrorBoundary = lazyComponent(() =>
     }
   }
 )
+
+export const withErrorBoundary = <P extends object>(
+  component: React.ComponentClass<P> | ((props: P) => React.ReactNode),
+) => {
+  return (props: P) => createElement(ErrorBoundary, null, createElement(component, props))
+}

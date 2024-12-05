@@ -1,4 +1,4 @@
-import { PluginDefinition } from "picnic"
+import type { PluginDefinition } from "picnic"
 import common from "plugins/common"
 import core from "plugins/core"
 import markdownPreview from "plugins/markdownPreview"

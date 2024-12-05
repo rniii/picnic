@@ -1,4 +1,4 @@
-import { PatchContext, PatchDefinition, PatchFunction, PatchGroupDefinition, PluginDefinition } from "picnic"
+import type { PatchContext, PatchDefinition, PatchFunction, PatchGroupDefinition, PluginDefinition } from "picnic"
 import { pluginDefs } from "plugins"
 import { wreq } from "webpack"
 
@@ -12,7 +12,7 @@ if ("webpackJsonp" in window)
 if ("browser" in window || "chrome" in window)
   console.warn("%c picnic | %cI shouldn't be running on the extension side!!", ...consoleStyle)
 
-console.log( `%cpicnic | %cLoading v${VERSION}!`, ...consoleStyle)
+console.log(`%cpicnic | %cLoading v${VERSION}!`, ...consoleStyle)
 
 interface Patch extends PatchDefinition {
   query: string[]

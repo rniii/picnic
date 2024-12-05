@@ -1,6 +1,7 @@
-import { ErrorBoundary } from "components/ErrorBoundary"
 import MarkdownIt from "markdown-it"
 import { define, devs, re, replace } from "picnic"
+import { useSelector } from "./common/react-redux"
+import { withErrorBoundary } from "components/ErrorBoundary"
 
 const md = MarkdownIt()
   .set({ linkify: true })
@@ -45,15 +46,15 @@ md.core.ruler.after("linkify", "shorten_links", (state) => {
   return false
 })
 
-// @ts-ignore
-console.log(window.md = md)
-
 // parsed by mastodon, but stripped out
 md.renderer.rules.hr = () => ""
 
-const Preview = (props: any) => {
-  // TODO: for some reason `props` doesn't contain the post format, but this should only render if
-  // markdown is selected
+const Preview = (props: { text: string }) => {
+  const contentType = useSelector(state => state.getIn(["compose", "content_type"]))
+
+  // TODO: html preview
+  if (contentType != "text/markdown")
+    return
 
   return (
     <div className="status__content">
@@ -80,9 +81,5 @@ export default define({
     },
   ],
 
-  renderPreview: (props: any) => (
-    <ErrorBoundary>
-      <Preview {...props} />
-    </ErrorBoundary>
-  ),
+  renderPreview: withErrorBoundary(Preview),
 })

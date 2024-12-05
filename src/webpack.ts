@@ -1,3 +1,5 @@
+import { lazy } from "picnic"
+
 export interface WebpackFactory {
   (module: WebpackModule, exports: any, require: typeof wreq): any
 }
@@ -35,15 +37,29 @@ export const getModule = (...filter: string[]) => {
   }
 }
 
-export const lazyModule = (...filter: string[]) => {
-  let cached: any
-  return new Proxy({} as any, {
-    get(_, key) {
-      cached ??= getModule(...filter)
-      return cached[key]
-    },
-  })
+export const lazyModule = (...filter: string[]) => lazy(() => getModule(...filter))
+
+export const getMangled = (
+  query: string | string[],
+  predicate: (obj: any) => boolean,
+) => {
+  if (!Array.isArray(query))
+    query = [query]
+
+  const m = search(...query)
+  if (!m || !m.exports)
+    return
+
+  for (const p in m.exports) {
+    if (predicate(m.exports[p]))
+      return m.exports[p]
+  }
 }
+
+export const lazyMangled = (
+  query: string | string[],
+  predicate: (obj: any) => boolean,
+) => lazy(() => getMangled(query, predicate))
 
 export const search = (...query: string[]) => {
   for (const id in wreq.m) {
@@ -57,7 +73,6 @@ export const search = (...query: string[]) => {
     if (!query.every(m => code.includes(m)))
       continue
 
-    console.log("Found module %i", id)
-    return wreq.c[id].exports
+    return wreq.c[id]
   }
 }
