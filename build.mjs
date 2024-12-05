@@ -16,8 +16,9 @@ const resources = [
 
 const options = /** @type {import("esbuild").BuildOptions} */ ({
   bundle: true,
-  minifySyntax: true,
+  minify: true,
   treeShaking: true,
+  sourcemap: "linked",
   logLevel: "info",
   globalName: "picnic",
   define: { VERSION: JSON.stringify(version), },

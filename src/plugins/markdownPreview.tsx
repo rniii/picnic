@@ -1,10 +1,11 @@
+import { withErrorBoundary } from "components/ErrorBoundary"
 import MarkdownIt from "markdown-it"
 import { define, devs, re, replace } from "picnic"
+import sanitize from "sanitize-html"
 import { useSelector } from "./common/react-redux"
-import { withErrorBoundary } from "components/ErrorBoundary"
 
 const md = MarkdownIt()
-  .set({ linkify: true })
+  .set({ linkify: true, html: true })
   .disable(["table", "code"])
 
 md.linkify.set({ fuzzyEmail: false, fuzzyLink: false })
@@ -46,21 +47,51 @@ md.core.ruler.after("linkify", "shorten_links", (state) => {
   return false
 })
 
-// parsed by mastodon, but stripped out
-md.renderer.rules.hr = () => ""
+const sanitizeOpts: sanitize.IOptions = {
+  allowedSchemes: "http https dat dweb ipfs ipns ssb gopher xmpp magnet gemini"
+    .split(" "),
+  allowedTags: "p br span a abbr del s pre blockquote code b strong u sub sup i em h1 h2 h3 h4 h5 ul ol li ruby rt rp"
+    .split(" "),
+  allowedClasses: { "*": [/^(h|p|u|dt|e)-/] },
+  allowedAttributes: {
+    a: ["href", "rel", "class", "title", "translate", "target"],
+    abbr: ["title"],
+    span: ["class", "translate"],
+    blockquote: ["cite"],
+    ol: ["start", "reversed"],
+    li: ["value"],
+  },
+  transformTags: {
+    a: sanitize.simpleTransform("a", {
+      target: "_blank",
+      rel: "nofollow noopener noreferrer",
+    }),
+  },
+}
 
 const Preview = (props: { text: string }) => {
   const contentType = useSelector(state => state.getIn(["compose", "content_type"]))
 
-  // TODO: html preview
-  if (contentType != "text/markdown")
-    return
+  let html: string
+
+  if (contentType == "text/markdown") {
+    html = sanitize(md.render(props.text), sanitizeOpts)
+  } else if (contentType == "text/html") {
+    html = sanitize(props.text, sanitizeOpts)
+  } else {
+    // plaintext?
+    return (
+      <div className="status__content">
+        <div className="status__content__text">{props.text}</div>
+      </div>
+    )
+  }
 
   return (
     <div className="status__content">
       <div
         className="status__content__text"
-        dangerouslySetInnerHTML={{ __html: md.render(props.text) }}
+        dangerouslySetInnerHTML={{ __html: html }}
       >
       </div>
     </div>
@@ -69,7 +100,7 @@ const Preview = (props: { text: string }) => {
 
 export default define({
   name: "picnic/markdown-preview",
-  description: "Adds a preview of the post's markdown. Does not currently support HTML.",
+  description: "Adds a preview of the post's markdown or HTML.",
   authors: [devs.rini],
   patches: [
     {
