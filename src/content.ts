@@ -66,12 +66,13 @@ const applyPatches = (plugin: Plugin, factories: any, ctx: PatchContext) => {
         if (!patch.query.every(m => code.includes(m)))
           continue
 
+        if (patch.applied)
+          console.warn("Query is not unique: ", patch.query)
+        patch.applied = true
+
         matched = true
         for (const f of patch.patch) {
           code = f(code, ctx)
-          if (patch.applied)
-            console.warn("Query is not unique: ", patch.query)
-          patch.applied = true
         }
 
         if (!code.includes("//# sourceURL"))
@@ -80,7 +81,7 @@ const applyPatches = (plugin: Plugin, factories: any, ctx: PatchContext) => {
         try {
           factories[m] = (0, eval)(`// Patched by ${plugin.name}\n0,${code}`)
         } catch (e) {
-          console.warn(e)
+          console.warn(e, { code })
         }
       }
 

@@ -34,12 +34,10 @@ md.core.ruler.after("linkify", "shorten_links", (state) => {
         token.content = token.content.replace(/^https?:\/\/(www\.)?|xmpp:/, "")
         if (token.content.length > 30)
           token.content = token.content.slice(0, 30) + "…"
-      } else if (token.type == "link_open") {
+      }
+      if ((foundLink = token.type == "link_open")) {
         if (token.attrGet("href")?.match(/^[a-z]/))
           token.attrSet("class", "unhandled-link")
-        foundLink = true
-      } else {
-        foundLink = false
       }
     }
   }
